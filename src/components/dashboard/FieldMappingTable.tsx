@@ -190,7 +190,7 @@ const FieldMappingTable = ({
           Save as Template
         </Button>
         <Button onClick={onValidateAndContinue} disabled={mappedCount === 0}>
-          Validate & Continue
+          Continue & Validate
         </Button>
       </div>
     </div>

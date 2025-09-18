@@ -3,12 +3,25 @@ import Sidebar from "./Sidebar";
 import ProgressTracker from "./ProgressTracker";
 import UploadSection from "./UploadSection";
 import FieldMappingTable from "./FieldMappingTable";
+import ValidationScreen from "./ValidationScreen";
+import SummaryScreen from "./SummaryScreen";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("patient-master");
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [fieldCount, setFieldCount] = useState<number>(0);
+  const [currentStep, setCurrentStep] = useState<'upload' | 'mapping' | 'validation' | 'summary'>('upload');
+
+  // Update current step when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "fee-structure") {
+      setCurrentStep('mapping'); // Fee Structure starts at mapping step
+    } else {
+      setCurrentStep('upload'); // Patient Master starts at upload step
+    }
+  };
 
   // Different states for different tabs
   const getStepsForTab = (tab: string) => {
@@ -24,19 +37,21 @@ const Dashboard = () => {
           id: "mapping",
           title: "Auto Mapping",
           description: "Processing field mappings",
-          status: 'current' as 'completed' | 'current' | 'pending' | 'error'
+          status: (currentStep === 'mapping' ? 'current' : 
+                  currentStep === 'validation' || currentStep === 'summary' ? 'completed' : 'pending') as 'completed' | 'current' | 'pending' | 'error'
         },
         {
           id: "validation",
           title: "Validation",
           description: "Awaiting validation",
-          status: 'pending' as 'completed' | 'current' | 'pending' | 'error'
+          status: (currentStep === 'validation' ? 'current' : 
+                  currentStep === 'summary' ? 'completed' : 'pending') as 'completed' | 'current' | 'pending' | 'error'
         },
         {
           id: "summary",
           title: "Summary",
           description: "Final review",
-          status: 'pending' as 'completed' | 'current' | 'pending' | 'error'
+          status: (currentStep === 'summary' ? 'current' : 'pending') as 'completed' | 'current' | 'pending' | 'error'
         }
       ];
     }
@@ -254,33 +269,138 @@ const Dashboard = () => {
   };
 
   const handleValidateAndContinue = () => {
-    console.log("Validating and continuing...");
+    setCurrentStep('validation');
+  };
+
+  const handleBackToMapping = () => {
+    setCurrentStep('mapping');
+  };
+
+  const handleContinueToSummary = () => {
+    setCurrentStep('summary');
+  };
+
+  const handleBackToValidation = () => {
+    setCurrentStep('validation');
+  };
+
+  const handleFinalize = () => {
+    console.log("Finalizing import...");
+    // Reset to initial state or redirect
+    setCurrentStep('upload');
+    setActiveTab('patient-master');
+  };
+
+  // Sample validation results for Fee Structure
+  const validationResults = [
+    {
+      id: "1",
+      field: "billing_code",
+      type: "error" as const,
+      message: "Field is unmapped and required for billing processing",
+      suggestion: "Map this field to 'Billing Code' or 'Procedure Code'"
+    },
+    {
+      id: "2", 
+      field: "insurance_rate",
+      type: "warning" as const,
+      message: "Field is unmapped but optional for fee structure",
+      suggestion: "Consider mapping to 'Insurance Rate' for complete data coverage"
+    },
+    {
+      id: "3",
+      field: "deductible_amt", 
+      type: "warning" as const,
+      message: "Field contains currency values but is unmapped",
+      suggestion: "Map to 'Deductible Amount' to track patient cost responsibility"
+    },
+    {
+      id: "4",
+      field: "service_desc",
+      type: "info" as const,
+      message: "Field has partial mapping with 72% confidence",
+      suggestion: "Review mapping accuracy for 'Service Description'"
+    }
+  ];
+
+  // Sample summary data
+  const summaryData = {
+    totalFields: 8,
+    mappedFields: 4,
+    unmappedFields: 4,
+    validationsPassed: 4,
+    validationsFailed: 1,
+    dataType: activeTab as 'patient-master' | 'fee-structure',
+    uploadDate: new Date().toLocaleDateString(),
+    fileName: 'fee_structure_2024.xlsx'
   };
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
       
       <div className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <ProgressTracker steps={getStepsForTab(activeTab)} />
           
-          {(activeTab === "patient-master" && (uploadStatus === 'idle' || uploadStatus === 'uploading')) ? (
-            <UploadSection
-              onFileUpload={handleFileUpload}
-              uploadStatus={uploadStatus}
-              uploadedFileName={uploadedFile || undefined}
-              fieldCount={fieldCount}
-            />
-          ) : (
-            <FieldMappingTable
-              mappings={getFieldMappingsForTab(activeTab)}
-              baseFields={getBaseFieldsForTab(activeTab)}
-              onFieldMap={handleFieldMap}
-              onSaveTemplate={handleSaveTemplate}
-              onValidateAndContinue={handleValidateAndContinue}
-            />
-          )}
+          {(() => {
+            // Patient Master flow
+            if (activeTab === "patient-master") {
+              if (uploadStatus === 'idle' || uploadStatus === 'uploading') {
+                return (
+                  <UploadSection
+                    onFileUpload={handleFileUpload}
+                    uploadStatus={uploadStatus}
+                    uploadedFileName={uploadedFile || undefined}
+                    fieldCount={fieldCount}
+                  />
+                );
+              } else {
+                return (
+                  <FieldMappingTable
+                    mappings={getFieldMappingsForTab(activeTab)}
+                    baseFields={getBaseFieldsForTab(activeTab)}
+                    onFieldMap={handleFieldMap}
+                    onSaveTemplate={handleSaveTemplate}
+                    onValidateAndContinue={handleValidateAndContinue}
+                  />
+                );
+              }
+            }
+            
+            // Fee Structure flow
+            if (activeTab === "fee-structure") {
+              if (currentStep === 'mapping') {
+                return (
+                  <FieldMappingTable
+                    mappings={getFieldMappingsForTab(activeTab)}
+                    baseFields={getBaseFieldsForTab(activeTab)}
+                    onFieldMap={handleFieldMap}
+                    onSaveTemplate={handleSaveTemplate}
+                    onValidateAndContinue={handleValidateAndContinue}
+                  />
+                );
+              } else if (currentStep === 'validation') {
+                return (
+                  <ValidationScreen
+                    validationResults={validationResults}
+                    onContinueToSummary={handleContinueToSummary}
+                    onBackToMapping={handleBackToMapping}
+                  />
+                );
+              } else if (currentStep === 'summary') {
+                return (
+                  <SummaryScreen
+                    summaryData={summaryData}
+                    onFinalize={handleFinalize}
+                    onBackToValidation={handleBackToValidation}
+                  />
+                );
+              }
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>
