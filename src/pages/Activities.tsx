@@ -147,7 +147,11 @@ const Activities = () => {
     <div className="min-h-screen bg-background">
       <TopBar />
       <div className="flex">
-        <Sidebar activeTab="activities" onTabChange={() => {}} />
+        <Sidebar activeTab="activities" onTabChange={(tab) => {
+          if (tab === "patient-master" || tab === "fee-structure") {
+            navigate("/dashboard");
+          }
+        }} />
         
         <div className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">

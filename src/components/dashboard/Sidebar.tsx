@@ -17,6 +17,12 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   };
   const tabs = [
     {
+      id: "activities",
+      label: "Activities",
+      icon: Activity,
+      description: "Track processing activities"
+    },
+    {
       id: "patient-master",
       label: "Patient Master",
       icon: Users,
@@ -27,12 +33,6 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       label: "Fee Structure",
       icon: Receipt,
       description: "Configure billing and fee data"
-    },
-    {
-      id: "activities",
-      label: "Activities",
-      icon: Activity,
-      description: "Track processing activities"
     }
   ];
 

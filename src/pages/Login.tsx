@@ -20,7 +20,7 @@ const Login = () => {
       role: "Administrator",
       avatar: "/placeholder.svg"
     }));
-    navigate("/dashboard");
+    navigate("/activities");
   };
 
   return (
