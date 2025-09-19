@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Receipt } from "lucide-react";
+import { Users, Receipt, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -8,6 +8,13 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "activities") {
+      window.location.href = "/activities";
+    } else {
+      onTabChange(tabId);
+    }
+  };
   const tabs = [
     {
       id: "patient-master",
@@ -20,6 +27,12 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       label: "Fee Structure",
       icon: Receipt,
       description: "Configure billing and fee data"
+    },
+    {
+      id: "activities",
+      label: "Activities",
+      icon: Activity,
+      description: "Track processing activities"
     }
   ];
 
@@ -36,7 +49,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
           return (
             <button
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className={cn(
                 "w-full flex items-start p-4 rounded-lg border text-left transition-all duration-200",
                 activeTab === tab.id
